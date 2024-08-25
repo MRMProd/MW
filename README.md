@@ -8,3 +8,5 @@ This middleware disbales bgAccel during night time, this can be done using a dif
 
 "Snack"
 ![IMG_057EF02BFCE3-1](https://github.com/user-attachments/assets/9304f685-b74f-4330-bf05-52286da069a2)
+
+This MW gives you an idea of how to use it andmodify it to suit your needs. A different target bg from profile or TT can cnange most settings from your profile
