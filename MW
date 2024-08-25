@@ -1,0 +1,78 @@
+function middleware(iob, currenttemp, glucose, profile, autosens, meal, reservoir, clock, pumphistory, preferences, basalprofile) {
+    const target = profile.min_bg;
+
+    // Configuration settings for different target BG ranges
+    const bgSettings = [
+        { min: 108, sensFactor: 1.5, iobThreshold: 25, bgAccelFactor: 1 },   // BG Target > 5.8
+        { min: 100, sensFactor: 0.75, iobThreshold: null, bgAccelFactor: 1 }, // BG Target 5.6
+        { min: 97, sensFactor: 0.85, iobThreshold: null, bgAccelFactor: 1 },  // BG Target 5.4
+        { min: 93, sensFactor: 1.2, iobThreshold: 20, bgAccelFactor: 0.55 },  // BG Target 5.2
+        { min: 82, sensFactor: 1, iobThreshold: null, bgAccelFactor: 1 },     // BG Target 5.0
+        { min: 79, sensFactor: 1.4, iobThreshold: null, bgAccelFactor: 0.55 } // BG Target < 4.8 "Food Time"
+    ];
+
+    // Store original profile values
+    const originalProfile = {
+        sens: profile.sens,
+        bgAccel_ISF_weight: profile.bgAccel_ISF_weight,
+        iob_threshold_percent: profile.iob_threshold_percent,
+        current_basal: profile.current_basal
+    };
+
+    // Disable autoISF at night 
+    let nightlyautoISFswitch = 1;
+    let reasonautoISFswitch = "";
+    const currentHour = new Date().getHours();
+
+    // Turn off at night (e.g., between 00:00 and 05:59)
+    if (nightlyautoISFswitch === 1 && currentHour >= 0 && currentHour <= 5) {
+        profile.enable_BG_acceleration = false;
+        reasonautoISFswitch = "accel disabled " + currentHour + ":00";
+    }
+
+    // Temporarily adjust basal rate (if needed)
+    profile.current_basal *= 1.1;
+
+    // Apply settings based on the target BG
+    for (let setting of bgSettings) {
+        if (target >= setting.min) {
+            profile.sens /= setting.sensFactor;
+            if (setting.iobThreshold !== null) {
+                profile.iob_threshold_percent = setting.iobThreshold;
+            }
+            profile.bgAccel_ISF_weight /= setting.bgAccelFactor;
+            break; // Apply the first matching setting and break the loop
+        }
+    }
+
+    // Check if any profile values have changed
+    const isfChanged = (originalProfile.sens !== profile.sens);
+    const bgAccelChanged = (originalProfile.bgAccel_ISF_weight !== profile.bgAccel_ISF_weight);
+    const iobChanged = (originalProfile.iob_threshold_percent !== profile.iob_threshold_percent);
+    const basalChanged = (originalProfile.current_basal !== profile.current_basal);
+
+    // Build the result message
+    let result = "";
+
+    if (isfChanged || bgAccelChanged || iobChanged || basalChanged) {
+        result = `ISF from ${(originalProfile.sens / 18).toFixed(1)} to ${(profile.sens / 18).toFixed(1)} (ratio: ${(originalProfile.sens / profile.sens).toFixed(2)})`;
+
+        if (bgAccelChanged) {
+            result += `, bgAccel from ${originalProfile.bgAccel_ISF_weight} to ${profile.bgAccel_ISF_weight.toFixed(2)}`;
+        }
+        if (iobChanged) {
+            result += `, iob_thr from ${originalProfile.iob_threshold_percent} to ${profile.iob_threshold_percent}`;
+        }
+        if (basalChanged) {
+            result += `, basal from ${originalProfile.current_basal} to ${profile.current_basal.toFixed(2)}`;
+        }
+    } else {
+        result = "no change.";
+    }
+
+    if (reasonautoISFswitch) {
+        result += "  " + reasonautoISFswitch;
+    }
+
+    return result;
+}
