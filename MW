@@ -1,4 +1,4 @@
-function middleware(iob, currenttemp, glucose, profile, autosens, meal, reservoir, clock, pumphistory, preferences, basalprofile) {
+edfunction middleware(iob, currenttemp, glucose, profile, autosens, meal, reservoir, clock, pumphistory, preferences, basalprofile) {
     const target = profile.min_bg;
 
     // Configuration settings for different target BG ranges
@@ -19,7 +19,7 @@ function middleware(iob, currenttemp, glucose, profile, autosens, meal, reservoi
         current_basal: profile.current_basal
     };
 
-    // Disable autoISF at night 
+    // Disable selected autoISF functions at night 
     let nightlyautoISFswitch = 1;
     let reasonautoISFswitch = "";
     const currentHour = new Date().getHours();
