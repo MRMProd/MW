@@ -31,7 +31,7 @@ edfunction middleware(iob, currenttemp, glucose, profile, autosens, meal, reserv
     }
 
     // Temporarily adjust basal rate (if needed)
-    profile.current_basal *= 1.1;
+    profile.current_basal *= 1;
 
     // Apply settings based on the target BG
     for (let setting of bgSettings) {
